@@ -27,7 +27,7 @@ class _CRG(Module):
         # # #
 
         # Clk / Rst
-        clk50 = platform.request("clk50")
+        clk50 = platform.request("clk_50")
         platform.add_period_constraint(clk50, 1e9/50e6)
 
         # PLL
@@ -74,7 +74,7 @@ class BaseSoC(SoCCore):
         platform = de1soc.Platform()
 
         # SoCCore ----------------------------------------------------------------------------------
-        SoCCore.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
+        SoCCore.__init__(self, platform, clk_freq=sys_clk_freq, cpu_type=None, **kwargs)
 
         # CRG --------------------------------------------------------------------------------------
         self.submodules.crg = _CRG(platform)
