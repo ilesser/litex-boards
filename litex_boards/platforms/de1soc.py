@@ -40,19 +40,19 @@ _io = [
         IOStandard("3.3-V LVTTL")
     ),
 
-    ("i2c_fpga", 0
+    ("i2c_fpga", 0,
         Subsignal("sclk", Pins("J12")), # FPGA_I2C_SCLK
         Subsignal("sdat", Pins("K12")), # FPGA_I2C_SDAT
         IOStandard("3.3-V LVTTL")
     ),
 
-    ("i2c1_hps", 0
+    ("i2c1_hps", 0,
         Subsignal("sclk", Pins("E23")), # HPS_I2C1_SCLK
         Subsignal("sdat", Pins("C24")), # HPS_I2C1_SDAT
         IOStandard("3.3-V LVTTL")
     ),
 
-    ("i2c2_hps", 0
+    ("i2c2_hps", 0,
         Subsignal("sclk", Pins("H23")), # HPS_I2C2_SCLK
         Subsignal("sdat", Pins("A25")), # HPS_I2C2_SDAT
         IOStandard("3.3-V LVTTL")
@@ -131,7 +131,7 @@ _io = [
         Subsignal("key",        Pins("G21")),  # HPS_KEY
         Subsignal("led",        Pins("A24")),  # HPS_LED
         IOStandard("3.3-V LVTTL")
-    )
+    ),
 
     ("jtag_hps", 0,
         Subsignal("tck", Pins("H22")),
