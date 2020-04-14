@@ -131,17 +131,18 @@ _io = [
     ),
 
     ("hps", 0,
-        Subsignal("clk1_25",    Pins("D25")),  # HPS_CLK1
-        Subsignal("clk2_25",    Pins("F25")),  # HPS_CLK2
-        Subsignal("nrst",       Pins("C27")),  # KEY7 (HPS_WARM_RST_n)
-        Subsignal("npor",       Pins("F23")),  # KEY5 (HPS_RESET_n)
-        Subsignal("trst",       Pins("A28")),  # HPS_TRST
-        Subsignal("porsel",     Pins("F24")),  # HPS_PORSEL
-        Subsignal("bootsel",    Pins("H20 A18 D20")),  # HPS_BOOTSEL[0:2]
-        Subsignal("key",        Pins("G21")),  # HPS_KEY
-        Subsignal("led",        Pins("A24")),  # HPS_LED
-        Subsignal("i2c_control",Pins("B26")),  # HPS_I2C_CONTROL
-        Subsignal("ltc_gpio",   Pins("H17")),  # HPS_LTC_GPIO
+        Subsignal("clk1_25",     Pins("D25")),          # HPS_CLK1 TODO: these are only for reference for the pll not for the AXI interfaces
+        Subsignal("clk2_25",     Pins("F25")),          # HPS_CLK2
+        Subsignal("nrst",        Pins("C27")),          # KEY7 (HPS_WARM_RST_n)
+        Subsignal("npor",        Pins("F23")),          # KEY5 (HPS_RESET_n)
+        Subsignal("trst",        Pins("A28")),          # HPS_TRST
+        Subsignal("porsel",      Pins("F24")),          # HPS_PORSEL
+        Subsignal("bootsel",     Pins("H20 A18 D20")),  # HPS_BOOTSEL[0:2]
+        Subsignal("key",         Pins("G21")),          # HPS_KEY
+        Subsignal("led",         Pins("A24")),          # HPS_LED
+        Subsignal("i2c_control", Pins("B26")),          # HPS_I2C_CONTROL
+        Subsignal("ltc_gpio",    Pins("H17")),          # HPS_LTC_GPIO
+        Subsignal("gsensor_int", Pins("B22")),          # HPS_GSENSOR_INT
         IOStandard("3.3-V LVTTL")
     ),
 
@@ -199,11 +200,6 @@ _io = [
         Subsignal("nxt",    Pins("A14")),                               # HPS_USB_NXT
         Subsignal("reset",  Pins("G17")),                               # HPS_USB_RESET
         Subsignal("stp",    Pins("C15")),                               # HPS_USB_STP
-        IOStandard("3.3-V LVTTL")
-    ),
-
-    ("hps_gsensor", 0,
-        Subsignal("int",    Pins("B22")),   # HPS_GSENSOR_INT
         IOStandard("3.3-V LVTTL")
     ),
 
