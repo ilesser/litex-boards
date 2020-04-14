@@ -10,9 +10,9 @@ from migen.genlib.resetsync import AsyncResetSynchronizer
 
 from litex_boards.platforms import de1soc
 
-from litex.soc.integration.soc_core import *
-from litex.soc.integration.soc_sdram import *
-from litex.soc.integration.builder import *
+from litex.soc.integration.soc_cyclonev import SoCCycloneV
+from litex.soc.integration.soc_sdram import soc_sdram_args, soc_sdram_argdict
+from litex.soc.integration.builder import Builder, builder_args, builder_argdict
 
 from litedram.modules import IS42S16320
 from litedram.phy import GENSDRPHY
@@ -68,13 +68,13 @@ class _CRG(Module):
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
-class BaseSoC(SoCCore):
+class BaseSoC(SoCCycloneV):
     def __init__(self, sys_clk_freq=int(50e6), **kwargs):
         assert sys_clk_freq == int(50e6)
         platform = de1soc.Platform()
 
-        # SoCCore ----------------------------------------------------------------------------------
-        SoCCore.__init__(self, platform, clk_freq=sys_clk_freq, cpu_type=None, **kwargs)
+        # SoCCycloneV ----------------------------------------------------------------------------------
+        SoCCycloneV.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
 
         # CRG --------------------------------------------------------------------------------------
         self.submodules.crg = _CRG(platform)
