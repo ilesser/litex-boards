@@ -248,3 +248,16 @@ class Platform(AlteraPlatform):
 
     def __init__(self):
         AlteraPlatform.__init__(self, "5CSEMA5F31C6", _io)
+    def add_hps_platform_specific_ios(self, hps_dict):
+        hps = self.request("hps")
+        hps_enet = self.request("hps_enet")
+        hps_uart = self.request("hps_uart")
+        hps_dict.update(
+            io_hps_io_gpio_inst_GPIO09 = hps_uart.conv_usb_n,
+            io_hps_io_gpio_inst_GPIO35 = hps_enet.int_n,
+            io_hps_io_gpio_inst_GPIO40 = hps.ltc_gpio,
+            io_hps_io_gpio_inst_GPIO48 = hps.i2c_control,
+            io_hps_io_gpio_inst_GPIO53 = hps.led,
+            io_hps_io_gpio_inst_GPIO54 = hps.key,
+            io_hps_io_gpio_inst_GPIO61 = hps.gsensor_int,
+        )
