@@ -5,7 +5,7 @@
 
 import argparse
 
-from migen import *
+from migen import Module
 from migen.genlib.resetsync import AsyncResetSynchronizer
 
 from litex_boards.platforms import de1soc

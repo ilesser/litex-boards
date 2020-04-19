@@ -1,7 +1,7 @@
 # This file is Copyright (c) 2019 Antony Pavlov <antonynpavlov@gmail.com>
 # License: BSD
 
-from litex.build.generic_platform import *
+from litex.build.generic_platform import Pins, IOStandard, Subsignal
 from litex.build.altera import AlteraPlatform
 
 # IOs ------------------------------------------------------------------
