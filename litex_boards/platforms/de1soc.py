@@ -130,19 +130,28 @@ _io = [
         IOStandard("3.3-V LVTTL")
     ),
 
-    ("hps", 0,
-        Subsignal("clk1_25",     Pins("D25")),          # HPS_CLK1 TODO: these are only for reference for the pll not for the AXI interfaces
-        Subsignal("clk2_25",     Pins("F25")),          # HPS_CLK2
+
+    ("hps_osc", 0, Pins("D25"), IOStandard("3.3-V LVTTL")), # HPS_CLK1 TODO: these are only for reference for the pll not for the AXI interfaces
+    ("hps_osc", 1, Pins("F25"), IOStandard("3.3-V LVTTL")), # HPS_CLK2
+
+    ("bootsel", 0, Pins("H20 A18 D20"), IOStandard("3.3-V LVTTL")),  # HPS_BOOTSEL[0:2]
+
+    ("hps_rst", 0,
         Subsignal("nrst",        Pins("C27")),          # KEY7 (HPS_WARM_RST_n)
         Subsignal("npor",        Pins("F23")),          # KEY5 (HPS_RESET_n)
         Subsignal("trst",        Pins("A28")),          # HPS_TRST
         Subsignal("porsel",      Pins("F24")),          # HPS_PORSEL
-        Subsignal("bootsel",     Pins("H20 A18 D20")),  # HPS_BOOTSEL[0:2]
-        Subsignal("key",         Pins("G21")),          # HPS_KEY
-        Subsignal("led",         Pins("A24")),          # HPS_LED
-        Subsignal("i2c_control", Pins("B26")),          # HPS_I2C_CONTROL
-        Subsignal("ltc_gpio",    Pins("H17")),          # HPS_LTC_GPIO
-        Subsignal("gsensor_int", Pins("B22")),          # HPS_GSENSOR_INT
+        IOStandard("3.3-V LVTTL")
+    ),
+
+    ("hps_ios", 0,
+        Subsignal("conv_usb_n",  Pins("B15")),   # HPS_CONV_USB_N
+        Subsignal("enet_int_n",  Pins("C19")),   # HPS_ENET_INT_N       Interrupt Open Drain Output
+        Subsignal("ltc_gpio",    Pins("H17")),   # HPS_LTC_GPIO
+        Subsignal("i2c_control", Pins("B26")),   # HPS_I2C_CONTROL
+        Subsignal("led",         Pins("A24")),   # HPS_LED
+        Subsignal("key",         Pins("G21")),   # HPS_KEY
+        Subsignal("gsensor_int", Pins("B22")),   # HPS_GSENSOR_INT
         IOStandard("3.3-V LVTTL")
     ),
 
@@ -155,7 +164,6 @@ _io = [
         Subsignal("reset_n", Pins("E18")),              # HPS_ENET_RESET_N     Hardware Reset Signal
         Subsignal("mdio",    Pins("E21")),              # HPS_ENET_MDIO        Management Data
         Subsignal("mdc",     Pins("B21")),              # HPS_ENET_MDC         Management Data Clock Reference
-        Subsignal("int_n",   Pins("C19")),              # HPS_ENET_INT_N       Interrupt Open Drain Output
         Subsignal("gtx_clk", Pins("H19")),              # HPS_ENET_GTX_CLK     GMII Transmit Clock 3.3V
         IOStandard("3.3-V LVTTL")
     ),
@@ -163,7 +171,6 @@ _io = [
     ("hps_uart", 0,
         Subsignal("rx",         Pins("B25")),   # HPS_UART_RX
         Subsignal("tx",         Pins("C25")),   # HPS_UART_TX
-        Subsignal("conv_usb_n", Pins("B15")),   # HPS_CONV_USB_N
         IOStandard("3.3-V LVTTL")
     ),
 
@@ -247,17 +254,4 @@ class Platform(AlteraPlatform):
     default_clk_period = 1e9/50e6
 
     def __init__(self):
-        AlteraPlatform.__init__(self, "5CSEMA5F31C6", _io)
-    def add_hps_platform_specific_ios(self, hps_dict):
-        hps = self.request("hps")
-        hps_enet = self.request("hps_enet")
-        hps_uart = self.request("hps_uart")
-        hps_dict.update(
-            io_hps_io_gpio_inst_GPIO09 = hps_uart.conv_usb_n,
-            io_hps_io_gpio_inst_GPIO35 = hps_enet.int_n,
-            io_hps_io_gpio_inst_GPIO40 = hps.ltc_gpio,
-            io_hps_io_gpio_inst_GPIO48 = hps.i2c_control,
-            io_hps_io_gpio_inst_GPIO53 = hps.led,
-            io_hps_io_gpio_inst_GPIO54 = hps.key,
-            io_hps_io_gpio_inst_GPIO61 = hps.gsensor_int,
-        )
+        super().__init__("5CSEMA5F31C6", _io)

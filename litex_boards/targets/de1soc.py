@@ -72,12 +72,14 @@ class BaseSoC(SoCCycloneV):
     def __init__(self, sys_clk_freq=int(50e6), **kwargs):
         assert sys_clk_freq == int(50e6)
         platform = de1soc.Platform()
-
-        # SoCCycloneV ----------------------------------------------------------------------------------
-        SoCCycloneV.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
+        super().__init__(platform, clk_freq=sys_clk_freq, **kwargs)
 
         # CRG --------------------------------------------------------------------------------------
         self.submodules.crg = _CRG(platform)
+
+        # HPS DE1-SoC IOs --------------------------------------------------------------------------
+        if self.hps:
+            self.add_hps_de1soc_ios()
 
         # SDR SDRAM --------------------------------------------------------------------------------
         if not self.hps and not self.integrated_main_ram_size:
@@ -91,6 +93,18 @@ class BaseSoC(SoCCycloneV):
                 l2_cache_min_data_width = kwargs.get("min_l2_data_width", 128),
                 l2_cache_reverse        = True
             )
+
+    def add_hps_de1soc_ios(self):
+        hps_ios = self.platform.request("hps_ios")
+        self.hps_params.update(
+            io_hps_io_gpio_inst_GPIO09 = hps_ios.conv_usb_n,
+            io_hps_io_gpio_inst_GPIO35 = hps_ios.enet_int_n,
+            io_hps_io_gpio_inst_GPIO40 = hps_ios.ltc_gpio,
+            io_hps_io_gpio_inst_GPIO48 = hps_ios.i2c_control,
+            io_hps_io_gpio_inst_GPIO53 = hps_ios.led,
+            io_hps_io_gpio_inst_GPIO54 = hps_ios.key,
+            io_hps_io_gpio_inst_GPIO61 = hps_ios.gsensor_int,
+        )
 
 # Build --------------------------------------------------------------------------------------------
 
