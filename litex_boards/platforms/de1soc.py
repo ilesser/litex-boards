@@ -2,6 +2,8 @@
 # This file is Copyright (c) 2020 Ignacio Lesser <ignacio.lesser@gmail.com>
 # License: BSD
 
+import os
+
 from litex.build.generic_platform import Pins, IOStandard, Subsignal
 from litex.build.altera import AlteraPlatform
 
@@ -256,3 +258,4 @@ class Platform(AlteraPlatform):
 
     def __init__(self):
         super().__init__("5CSEMA5F31C6", _io)
+        self.add_ip(os.path.join(os.path.abspath(os.path.dirname(__file__)), f"{self.name}.qsys"))
