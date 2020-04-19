@@ -99,6 +99,7 @@ def base_soc_parser():
         description="LiteX SoC on DE1-SoC",
         conflict_handler='resolve',
     )
+    builder_args(parser)
     soc_cyclonev_args(parser)
     soc_sdram_args(parser)
     return parser
