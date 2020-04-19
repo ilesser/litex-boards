@@ -1,4 +1,5 @@
 # This file is Copyright (c) 2019 Antony Pavlov <antonynpavlov@gmail.com>
+# This file is Copyright (c) 2020 Ignacio Lesser <ignacio.lesser@gmail.com>
 # License: BSD
 
 from litex.build.generic_platform import Pins, IOStandard, Subsignal
