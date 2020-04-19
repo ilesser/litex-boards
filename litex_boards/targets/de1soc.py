@@ -10,8 +10,8 @@ from migen.genlib.resetsync import AsyncResetSynchronizer
 
 from litex_boards.platforms import de1soc
 
-from litex.soc.integration.soc_cyclonev import SoCCycloneV
 from litex.soc.integration.soc_sdram import soc_sdram_args, soc_sdram_argdict
+from litex.soc.integration.soc_cyclonev import SoCCycloneV, soc_cyclonev_args, soc_cyclonev_argdict
 from litex.soc.integration.builder import Builder, builder_args, builder_argdict
 
 from litedram.modules import IS42S16320
@@ -80,7 +80,7 @@ class BaseSoC(SoCCycloneV):
         self.submodules.crg = _CRG(platform)
 
         # SDR SDRAM --------------------------------------------------------------------------------
-        if not self.integrated_main_ram_size:
+        if not self.hps and not self.integrated_main_ram_size:
             self.submodules.sdrphy = GENSDRPHY(platform.request("sdram"))
             self.add_sdram("sdram",
                 phy                     = self.sdrphy,
@@ -94,13 +94,26 @@ class BaseSoC(SoCCycloneV):
 
 # Build --------------------------------------------------------------------------------------------
 
-def main():
-    parser = argparse.ArgumentParser(description="LiteX SoC on DE1-SoC")
-    builder_args(parser)
+def base_soc_parser():
+    parser = argparse.ArgumentParser(
+        description="LiteX SoC on DE1-SoC",
+        conflict_handler='resolve',
+    )
+    soc_cyclonev_args(parser)
     soc_sdram_args(parser)
+    return parser
+
+def base_soc_argdict(args):
+    soc_cyclonev_dict = soc_cyclonev_argdict(args)
+    soc_sdram_dict = soc_sdram_argdict(args)
+    soc_cyclonev_dict.update(soc_sdram_dict)
+    return soc_cyclonev_dict
+
+def main():
+    parser = base_soc_parser()
     args = parser.parse_args()
 
-    soc = BaseSoC(**soc_sdram_argdict(args))
+    soc = BaseSoC(**base_soc_argdict(args))
     builder = Builder(soc, **builder_argdict(args))
     builder.build()
 
