@@ -121,15 +121,19 @@ _io = [
 
     ("sdram_clock", 0, Pins("AH12"), IOStandard("3.3-V LVTTL")),                                        # DRAM_CLK
     ("sdram", 0,
-        Subsignal("a", Pins("AK14 AH14 AG15 AE14 AB15 AC14 AD14 AF15 AH15 AG13 AG12 AH13 AJ14")),       # DRAM_ADDR[0:12]
-        Subsignal("ba", Pins("AF13 AJ12")),                                                             # DRAM_BA[0:1]
-        Subsignal("cs_n", Pins("AG11")),                                                                # DRAM_CS_N
-        Subsignal("cke", Pins("AK13")),                                                                 # DRAM_CKE
-        Subsignal("ras_n", Pins("AE13")),                                                               # DRAM_RAS_N
-        Subsignal("cas_n", Pins("AF11")),                                                               # DRAM_CAS_M
-        Subsignal("we_n", Pins("AA13")),                                                                # DRAM_WE_N
-        Subsignal("dq", Pins("AK6 AJ7 AK7 AK8 AK9 AG10 AK11 AJ11 AH10 AJ10 AJ9 AH9 AH8 AH7 AJ6 AJ5")),  # DRAM_DQ[0:15]
-        Subsignal("dm", Pins("AB13 AK12")),                                                             # DRAM_LDQM DRAM_UDQM
+        Subsignal("a",     Pins(
+            "AK14 AH14 AG15 AE14 AB15 AC14 AD14 AF15",
+            "AH15 AG13 AG12 AH13 AJ14")),
+        Subsignal("ba",    Pins("AF13 AJ12")),
+        Subsignal("cs_n",  Pins("AG11")),
+        Subsignal("cke",   Pins("AK13")),
+        Subsignal("ras_n", Pins("AE13")),
+        Subsignal("cas_n", Pins("AF11")),
+        Subsignal("we_n",  Pins("AA13")),
+        Subsignal("dq", Pins(
+            "AK6   AJ7 AK7 AK8 AK9 AG10 AK11 AJ11",
+            "AH10 AJ10 AJ9 AH9 AH8  AH7  AJ6 AJ5")),
+        Subsignal("dm", Pins("AB13 AK12")),
         IOStandard("3.3-V LVTTL")
     ),
 

@@ -9,10 +9,13 @@ import argparse
 from migen import Module, Instance, Signal, ClockDomain
 from migen.genlib.resetsync import AsyncResetSynchronizer
 
+from litex.build.io import DDROutput
+
 from litex_boards.platforms import de1soc
 
-from litex.soc.integration.soc_sdram import soc_sdram_args, soc_sdram_argdict
+from litex.soc.cores.clock import CycloneVPLL
 from litex.soc.integration.soc_core import SoCCore
+from litex.soc.integration.soc_sdram import soc_sdram_args, soc_sdram_argdict
 from litex.soc.integration.builder import Builder, builder_args, builder_argdict
 
 from litedram.modules import IS42S16320
@@ -21,7 +24,7 @@ from litedram.phy import GENSDRPHY
 # CRG ----------------------------------------------------------------------------------------------
 
 class _CRG(Module):
-    def __init__(self, platform):
+    def __init__(self, platform, sys_clk_freq):
         self.clock_domains.cd_sys    = ClockDomain()
         self.clock_domains.cd_sys_ps = ClockDomain(reset_less=True)
 
@@ -32,51 +35,23 @@ class _CRG(Module):
         platform.add_period_constraint(clk50, 1e9/50e6)
 
         # PLL
-        pll_locked  = Signal()
-        pll_clk_out = Signal(6)
-        self.specials += \
-            Instance("ALTPLL",
-                p_BANDWIDTH_TYPE         = "AUTO",
-                p_CLK0_DIVIDE_BY         = 1,
-                p_CLK0_DUTY_CYCLE        = 50,
-                p_CLK0_MULTIPLY_BY       = 1,
-                p_CLK0_PHASE_SHIFT       = "0",
-                p_CLK1_DIVIDE_BY         = 1,
-                p_CLK1_DUTY_CYCLE        = 50,
-                p_CLK1_MULTIPLY_BY       = 1,
-                p_CLK1_PHASE_SHIFT       = "5000", # 90°
-                p_COMPENSATE_CLOCK       = "CLK0",
-                p_INCLK0_INPUT_FREQUENCY = 20000,
-                p_OPERATION_MODE         = "NORMAL",
-                i_INCLK                  = clk50,
-                o_CLK                    = pll_clk_out,
-                i_ARESET                 = 0,
-                i_CLKENA                 = 0x3f,
-                i_EXTCLKENA              = 0xf,
-                i_FBIN                   = 1,
-                i_PFDENA                 = 1,
-                i_PLLENA                 = 1,
-                o_LOCKED                 = pll_locked,
-            )
-        self.comb += [
-            self.cd_sys.clk.eq(pll_clk_out[0]),
-            self.cd_sys_ps.clk.eq(pll_clk_out[1]),
-        ]
-        self.specials += AsyncResetSynchronizer(self.cd_sys, ~pll_locked)
+        self.submodules.pll = pll = CycloneVPLL(speedgrade="-C6")
+        pll.register_clkin(clk50, 50e6)
+        pll.create_clkout(self.cd_sys,    sys_clk_freq)
+        pll.create_clkout(self.cd_sys_ps, sys_clk_freq, phase=90)
 
         # SDRAM clock
-        self.comb += platform.request("sdram_clock").eq(self.cd_sys_ps.clk)
+        self.specials += DDROutput(1, 0, platform.request("sdram_clock"), ClockSignal("sys_ps"))
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
 class BaseSoC(SoCCore):
     def __init__(self, sys_clk_freq=int(50e6), **kwargs):
-        assert sys_clk_freq == int(50e6)
         platform = de1soc.Platform()
         super().__init__(platform, clk_freq=sys_clk_freq, **kwargs)
 
         # CRG --------------------------------------------------------------------------------------
-        self.submodules.crg = _CRG(platform)
+        self.submodules.crg = _CRG(platform, sys_clk_freq)
 
         # HPS DE1-SoC IOs --------------------------------------------------------------------------
         if self.cpu_type == "hps":

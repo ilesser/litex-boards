@@ -98,7 +98,7 @@ class BaseSoC(SoCCore):
         SoCCore.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
 
         # CRG --------------------------------------------------------------------------------------
-        with_usb_pll = kwargs.get("uart_name", None) == "usb_cdc"
+        with_usb_pll = kwargs.get("uart_name", None) == "usb_acm"
         self.submodules.crg = _CRG(platform, sys_clk_freq, with_usb_pll)
 
         # DDR3 SDRAM -------------------------------------------------------------------------------
@@ -116,7 +116,6 @@ class BaseSoC(SoCCore):
                 platform.request("ddram"),
                 sys_clk_freq=sys_clk_freq)
             self.add_csr("ddrphy")
-            self.add_constant("ECP5DDRPHY")
             self.comb += self.crg.stop.eq(self.ddrphy.init.stop)
             self.add_sdram("sdram",
                 phy                     = self.ddrphy,

@@ -7,16 +7,27 @@
 #
 # 1) SoC with regular UART and optional Ethernet connected to the CPU:
 # Connect a USB/UART to J19: TX of the FPGA is DATA_LED-, RX of the FPGA is KEY+.
-# ./colorlight_5a_75b.py (add --with-ethernet to add Ethernet capability)
+# ./colorlight_5a_75b.py --revision=7.0 (or 6.1) (--with-ethernet to add Ethernet capability)
+# Note: on revision 6.1, add --uart-baudrate=9600 to lower the baudrate.
 # ./colorlight_5a_75b.py --load
 # You should see the LiteX BIOS and be able to interact with it.
 #
 # 2) SoC with UART in crossover mode over Etherbone:
-# ./colorlight_5a_75b.py --uart-name=crossover --with-etherbone --csr-csv=csr.csv
+# ./colorlight_5a_75b.py --revision=7.0 (or 6.1) --uart-name=crossover --with-etherbone --csr-csv=csr.csv
 # ./colorlight_5a_75b.py --load
 # ping 192.168.1.50
 # Get and install wishbone tool from: https://github.com/litex-hub/wishbone-utils/releases
 # wishbone-tool --ethernet-host 192.168.1.50 --server terminal --csr-csv csr.csv
+# You should see the LiteX BIOS and be able to interact with it.
+#
+# 3) SoC with USB-ACM UART (on V7.0):
+# - Replace U23 with a SN74CBT3245APWR or remove U23 and place jumper wires to make the ports bi-directional.
+# - Place a 15K resistor between J4 pin 2 and J4 pin 4.
+# - Place a 15K resistor between J4 pin 3 and J4 pin 4.
+# - Place a 1.5K resistor between J4 pin 1 and J4 pin 3.
+# - Connect USB DP (Green) to J4 pin 3, USB DN (White) to J4 pin 2.
+# ./colorlight_5a_75b.py --revision=7.0 --uart-name=usb_acm
+# ./colorlight_5a_75b.py --load
 # You should see the LiteX BIOS and be able to interact with it.
 #
 # Disclaimer: SoC 2) is still a Proof of Concept with large timings violations on the IP/UDP and
@@ -28,6 +39,8 @@ import sys
 
 from migen import *
 from migen.genlib.resetsync import AsyncResetSynchronizer
+
+from litex.build.io import DDROutput
 
 from litex_boards.platforms import colorlight_5a_75b
 
@@ -45,7 +58,7 @@ from liteeth.phy.ecp5rgmii import LiteEthPHYRGMII
 # CRG ----------------------------------------------------------------------------------------------
 
 class _CRG(Module):
-    def __init__(self, platform, sys_clk_freq, with_rst=True):
+    def __init__(self, platform, sys_clk_freq, with_usb_pll=False, with_rst=True):
         self.clock_domains.cd_sys    = ClockDomain()
         self.clock_domains.cd_sys_ps = ClockDomain()
 
@@ -61,29 +74,40 @@ class _CRG(Module):
 
         pll.register_clkin(clk25, 25e6)
         pll.create_clkout(self.cd_sys,    sys_clk_freq)
-        pll.create_clkout(self.cd_sys_ps, sys_clk_freq, phase=90)
+        pll.create_clkout(self.cd_sys_ps, sys_clk_freq, phase=180) # Idealy 90° but needs to be increased.
         self.specials += AsyncResetSynchronizer(self.cd_sys, ~pll.locked | ~rst_n)
 
+        # USB PLL
+        if with_usb_pll:
+            self.submodules.usb_pll = usb_pll = ECP5PLL()
+            usb_pll.register_clkin(clk25, 25e6)
+            self.clock_domains.cd_usb_12 = ClockDomain()
+            self.clock_domains.cd_usb_48 = ClockDomain()
+            usb_pll.create_clkout(self.cd_usb_12, 12e6, margin=0)
+            usb_pll.create_clkout(self.cd_usb_48, 48e6, margin=0)
+
         # SDRAM clock
-        self.comb += platform.request("sdram_clock").eq(self.cd_sys_ps.clk)
+        self.specials += DDROutput(1, 0, platform.request("sdram_clock"), ClockSignal("sys_ps"))
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
 class BaseSoC(SoCCore):
-    def __init__(self, revision, with_ethernet=False, with_etherbone=False, **kwargs):
+    def __init__(self, revision, with_ethernet=False, with_etherbone=False, sys_clk_freq=60e6, **kwargs):
         platform     = colorlight_5a_75b.Platform(revision=revision)
-        sys_clk_freq = int(125e6) if with_etherbone else int(60e6)
+        if (with_etherbone):
+            sys_clk_freq = int(125e6)
 
         # SoCCore ----------------------------------------------------------------------------------
         SoCCore.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
 
         # CRG --------------------------------------------------------------------------------------
         with_rst = kwargs["uart_name"] not in ["serial", "bridge"] # serial_rx shared with user_btn_n.
-        self.submodules.crg = _CRG(platform, sys_clk_freq, with_rst=with_rst)
+        with_usb_pll = kwargs.get("uart_name", None) == "usb_acm"
+        self.submodules.crg = _CRG(platform, sys_clk_freq, with_usb_pll=with_usb_pll,with_rst=with_rst)
 
         # SDR SDRAM --------------------------------------------------------------------------------
         if not self.integrated_main_ram_size:
-            self.submodules.sdrphy = GENSDRPHY(platform.request("sdram"), cl=2)
+            self.submodules.sdrphy = GENSDRPHY(platform.request("sdram"))
             self.add_sdram("sdram",
                 phy                     = self.sdrphy,
                 module                  = M12L16161A(sys_clk_freq, "1:1"),
@@ -141,6 +165,7 @@ def main():
     parser.add_argument("--with-etherbone", action="store_true", help="enable Etherbone support")
     parser.add_argument("--eth-phy", default=0, type=int, help="Ethernet PHY 0 or 1 (default=0)")
     parser.add_argument("--load", action="store_true", help="load bitstream")
+    parser.add_argument("--sys-clk-freq", default=60e6, help="system clock frequency (default=60MHz)")
     args = parser.parse_args()
 
     if args.load:
@@ -150,6 +175,7 @@ def main():
     soc = BaseSoC(revision=args.revision,
         with_ethernet  = args.with_ethernet,
         with_etherbone = args.with_etherbone,
+        sys_clk_freq = args.sys_clk_freq,
         **soc_core_argdict(args))
     builder = Builder(soc, **builder_argdict(args))
     builder.build(**trellis_argdict(args))

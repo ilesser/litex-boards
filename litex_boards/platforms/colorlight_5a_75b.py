@@ -19,6 +19,14 @@ _io_v6_1 = [ # Documented by @smunaut
     # btn
     ("user_btn_n", 0, Pins("R16"), IOStandard("LVCMOS33")),
 
+    # serial
+    # There seems to be some capacitance on KEY+ pin, so high baudrates may not work (>9600bps).
+    ("serial", 0,
+        Subsignal("tx", Pins("U16")), # led (J19 DATA_LED-)
+        Subsignal("rx", Pins("R16")), # btn (J19 KEY+)
+        IOStandard("LVCMOS33")
+    ),
+
     # spi flash (GD25Q16CSIG)
     ("spiflash", 0,
         Subsignal("cs_n", Pins("R2")),
@@ -33,7 +41,7 @@ _io_v6_1 = [ # Documented by @smunaut
     ("sdram", 0,
         Subsignal("a", Pins(
             "B13 C14 A16 A17 B16 B15 A14 A13",
-            "A12 A11 B12 A11")),
+            "A12 A11 B12")),
         Subsignal("dq", Pins(
             "D15 E14 E13 D12 E12 D11 C10 B17",
             "B8  A8  C7  A7  A6  B6  A5  B5",
@@ -44,6 +52,7 @@ _io_v6_1 = [ # Documented by @smunaut
         Subsignal("cas_n", Pins("A9")),
         #Subsignal("cs_n", Pins("")), # gnd
         #Subsignal("cke",  Pins("")), # 3v3
+        Subsignal("ba",    Pins("B11")), # sdram pin a11 is ba
         #Subsignal("dm",   Pins("")), # gnd
         IOStandard("LVCMOS33"),
         Misc("SLEWRATE=FAST")
@@ -67,8 +76,8 @@ _io_v6_1 = [ # Documented by @smunaut
     ),
 
     ("eth_clocks", 1,
-        Subsignal("tx", Pins("")),
-        Subsignal("rx", Pins("")),
+        Subsignal("tx", Pins("U19")),
+        Subsignal("rx", Pins("L19")),
         IOStandard("LVCMOS33")
     ),
     ("eth", 1,
@@ -161,6 +170,13 @@ _io_v7_0 = [ # Documented by @miek
         Subsignal("rx_data", Pins("P13 N13 P14 M15")),
         Subsignal("tx_ctl",  Pins("R15")),
         Subsignal("tx_data", Pins("T14 R12 R13 R14")),
+        IOStandard("LVCMOS33")
+    ),
+
+    ("usb", 0,
+        Subsignal("d_p", Pins("M8")),
+        Subsignal("d_n", Pins("R2")),
+        Subsignal("pullup", Pins("P4")),
         IOStandard("LVCMOS33")
     ),
 ]

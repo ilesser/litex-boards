@@ -10,6 +10,8 @@ import sys
 from migen import *
 from migen.genlib.resetsync import AsyncResetSynchronizer
 
+from litex.build.io import DDROutput
+
 from litex_boards.platforms import ulx3s
 
 from litex.build.lattice.trellis import trellis_args, trellis_argdict
@@ -25,7 +27,7 @@ from litedram.phy import GENSDRPHY
 # CRG ----------------------------------------------------------------------------------------------
 
 class _CRG(Module):
-    def __init__(self, platform, sys_clk_freq):
+    def __init__(self, platform, sys_clk_freq, with_usb_pll=False):
         self.clock_domains.cd_sys    = ClockDomain()
         self.clock_domains.cd_sys_ps = ClockDomain(reset_less=True)
 
@@ -44,8 +46,17 @@ class _CRG(Module):
         pll.create_clkout(self.cd_sys_ps, sys_clk_freq, phase=90)
         self.specials += AsyncResetSynchronizer(self.cd_sys, ~pll.locked | rst)
 
+        # USB PLL
+        if with_usb_pll:
+            self.submodules.usb_pll = usb_pll = ECP5PLL()
+            usb_pll.register_clkin(clk25, 25e6)
+            self.clock_domains.cd_usb_12 = ClockDomain()
+            self.clock_domains.cd_usb_48 = ClockDomain()
+            usb_pll.create_clkout(self.cd_usb_12, 12e6, margin=0)
+            usb_pll.create_clkout(self.cd_usb_48, 48e6, margin=0)
+
         # SDRAM clock
-        self.comb += platform.request("sdram_clock").eq(self.cd_sys_ps.clk)
+        self.specials += DDROutput(1, 0, platform.request("sdram_clock"), ClockSignal("sys_ps"))
 
         # Prevent ESP32 from resetting FPGA
         self.comb += platform.request("wifi_gpio0").eq(1)
@@ -62,7 +73,8 @@ class BaseSoC(SoCCore):
         SoCCore.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
 
         # CRG --------------------------------------------------------------------------------------
-        self.submodules.crg = _CRG(platform, sys_clk_freq)
+        with_usb_pll = kwargs.get("uart_name", None) == "usb_acm"
+        self.submodules.crg = _CRG(platform, sys_clk_freq, with_usb_pll)
 
         # SDR SDRAM --------------------------------------------------------------------------------
         if not self.integrated_main_ram_size:

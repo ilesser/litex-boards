@@ -6,7 +6,8 @@
 import argparse
 
 from migen import *
-from migen.genlib.io import DDROutput
+
+from litex.build.io import DDROutput
 
 from litex_boards.platforms import linsn_rv901t
 
@@ -39,7 +40,7 @@ class _CRG(Module):
         pll.create_clkout(self.cd_sys_ps, sys_clk_freq, phase=90)
 
         # SDRAM clock
-        self.specials += DDROutput(0, 1, platform.request("sdram_clock"), ClockSignal("sys_ps"))
+        self.specials += DDROutput(1, 0, platform.request("sdram_clock"), ClockSignal("sys_ps"))
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
@@ -56,7 +57,7 @@ class BaseSoC(SoCCore):
 
         # SDR SDRAM --------------------------------------------------------------------------------
         if not self.integrated_main_ram_size:
-            self.submodules.sdrphy = GENSDRPHY(platform.request("sdram"), cmd_latency=2)
+            self.submodules.sdrphy = GENSDRPHY(platform.request("sdram"))
             self.add_sdram("sdram",
                 phy                     = self.sdrphy,
                 module                  = M12L64322A(sys_clk_freq, "1:1"),
